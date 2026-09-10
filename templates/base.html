@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Controle de Contratos{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css?v=3">
+</head>
+<body>
+    <img class="marca-dagua"
+         src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=900&h=1100&fit=crop&q=70"
+         alt=""
+         aria-hidden="true">
+
+    <header class="navbar">
+        <a href="/" class="brand">📋 Controle de Contratos</a>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/contratantes">Contratantes</a>
+            <a href="/contratados">Contratados</a>
+            <a href="/setores">Setores</a>
+            <a href="/contratos">Contratos</a>
+            <a href="/consultas">Consultas</a>
+            {% if usuario and usuario.perfil == 'admin' %}
+            <a href="/usuarios">Usuários</a>
+            {% endif %}
+            {% if usuario %}
+            <span style="margin-left:1rem; opacity:0.85; font-size:0.85rem;">{{ usuario.nome }} ({{ usuario.perfil }})</span>
+            <a href="/logout">Sair</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main class="container">
+        {% if message %}
+        <div class="alert alert-{{ message_type or 'info' }}">{{ message }}</div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        Sistema de Controle de Contratos &mdash; Acesso autenticado
+    </footer>
+</body>
+</html>

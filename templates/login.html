@@ -4,8 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — Controle de Contratos</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=3">
     <style>
+        .marca-dagua {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(900px, 90vw); height: auto; max-height: 85vh;
+            object-fit: contain; opacity: 0.28;
+            z-index: 0; pointer-events: none;
+        }
+        .login-box { position: relative; z-index: 1; }
         body.login-page {
             display: flex;
             align-items: center;
@@ -14,7 +22,7 @@
             background: #edf2f7;
         }
         .login-box {
-            background: #fff;
+            background: rgba(255,255,255,0.94);
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             padding: 2rem;
@@ -63,6 +71,10 @@
     </style>
 </head>
 <body class="login-page">
+    <img class="marca-dagua"
+         src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=900&h=1100&fit=crop&q=70"
+         alt=""
+         aria-hidden="true">
     <div class="login-box">
         <h1>Controle de Contratos</h1>
         <p class="sub">Acesso restrito a usuários autorizados</p>
