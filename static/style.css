@@ -24,22 +24,24 @@ body {
     position: relative;
 }
 
-/* Marca d'água imagem — não interfere no menu nem nos campos */
-body::before {
-    content: "";
+/* Marca d'água — imagem fixa no fundo */
+.marca-dagua {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: min(1100px, 95vw);
-    height: min(900px, 90vh);
-    background-image: url("https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=900&h=1100&fit=crop&q=70");
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: contain;
-    opacity: 0.14;
+    width: min(1000px, 92vw);
+    height: auto;
+    max-height: 88vh;
+    object-fit: contain;
+    opacity: 0.28;
     z-index: 0;
     pointer-events: none;
+    user-select: none;
+}
+
+body::before {
+    content: none;
 }
 
 .container,
@@ -47,15 +49,19 @@ body::before {
 .footer,
 .card,
 .stat-card,
-.login-box {
+.login-box,
+main {
     position: relative;
     z-index: 1;
+}
+
+.card, .stat-card {
+    background: rgba(255, 255, 255, 0.92);
 }
 
 a { color: var(--primary-light); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* Navbar */
 .navbar {
     background: var(--primary);
     color: white;
@@ -111,7 +117,6 @@ a:hover { text-decoration: underline; }
 }
 
 .card {
-    background: var(--card);
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     padding: 1.25rem;
@@ -172,7 +177,6 @@ th {
 }
 
 .stat-card {
-    background: white;
     border-radius: 8px;
     padding: 1rem;
     border: 1px solid var(--border);
