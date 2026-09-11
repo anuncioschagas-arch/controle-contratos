@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} — Controle de Contratos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ titulo }}</h1>
+    <a href="/usuarios" class="btn btn-outline">← Voltar</a>
+</div>
+
+<div class="card">
+    <form method="post" action="{{ action }}">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nome completo *</label>
+                <input type="text" name="nome" value="{{ item.nome if item else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label>Login *</label>
+                <input type="text" name="login" value="{{ item.login if item else '' }}" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Senha {% if item %}(deixe em branco para manter){% else %}*{% endif %}</label>
+                <input type="password" name="senha" {% if not item %}required{% endif %} autocomplete="new-password"
+                       minlength="6" placeholder="mínimo 6 caracteres">
+            </div>
+            <div class="form-group">
+                <label>Perfil *</label>
+                <select name="perfil" id="perfil" required>
+                    {% set p = item.perfil if item else 'operador' %}
+                    <option value="admin" {% if p == 'admin' %}selected{% endif %}>Admin (total)</option>
+                    <option value="operador" {% if p == 'operador' %}selected{% endif %}>Operador</option>
+                    <option value="consulta" {% if p == 'consulta' %}selected{% endif %}>Consulta</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Contratante vinculado</label>
+                <select name="contratante_id" id="contratante_id">
+                    <option value="">— Nenhum (só admin) —</option>
+                    {% for ct in contratantes %}
+                    <option value="{{ ct.id }}" {% if item and item.contratante_id == ct.id %}selected{% endif %}>{{ ct.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Setor vinculado</label>
+                <select name="setor_id" id="setor_id">
+                    <option value="">— Nenhum (só admin) —</option>
+                    {% for s in setores %}
+                    <option value="{{ s.id }}" {% if item and item.setor_id == s.id %}selected{% endif %}>
+                        {{ s.nome }}{% if s.contratante_nome %} ({{ s.contratante_nome }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Situação</label>
+                <select name="ativo">
+                    {% set a = item.ativo if item else 1 %}
+                    <option value="1" {% if a %}selected{% endif %}>Ativo</option>
+                    <option value="0" {% if not a %}selected{% endif %}>Inativo</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <a href="/usuarios" class="btn btn-outline">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
