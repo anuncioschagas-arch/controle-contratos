@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Chat — Controle de Contratos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Chat da Equipe</h1>
+</div>
+
+<div class="chat-layout">
+    <aside class="chat-sidebar card">
+        <a href="/chat" class="chat-contact {% if not com_usuario %}active{% endif %}">
+            <strong>Chat geral</strong>
+            <small>Todos os operadores e admins</small>
+        </a>
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:0.5rem 0;">
+        <p style="font-size:0.8rem;color:#718096;margin:0.25rem 0 0.5rem;">Mensagens privadas</p>
+        {% for c in contatos %}
+        <a href="/chat/com/{{ c.id }}" class="chat-contact {% if com_usuario and com_usuario.id == c.id %}active{% endif %}">
+            <strong>{{ c.nome }}</strong>
+            <small>{{ c.perfil }}{% if c.nao_lidas %} · <span class="badge badge-cancelado">{{ c.nao_lidas }}</span>{% endif %}</small>
+            {% if c.ultima %}
+            <span class="chat-preview">{{ c.ultima.texto[:40] }}{% if c.ultima.texto|length > 40 %}…{% endif %}</span>
+            {% endif %}
+        </a>
+        {% else %}
+        <p style="font-size:0.85rem;color:#a0aec0;">Nenhum outro usuário no sistema.</p>
+        {% endfor %}
+    </aside>
+
+    <section class="chat-main card">
+        <div class="chat-header">
+            {% if com_usuario %}
+            <strong>{{ com_usuario.nome }}</strong>
+            <span class="badge badge-ativo">{{ com_usuario.perfil }}</span>
+            {% else %}
+            <strong>Chat geral da equipe</strong>
+            {% endif %}
+        </div>
+
+        <div class="chat-messages" id="chat-messages" data-com="{{ com_usuario.id if com_usuario else '' }}" data-last="{{ mensagens[-1].id if mensagens else 0 }}">
+            {% for m in mensagens %}
+            <div class="chat-bubble {% if m.remetente_id == usuario.id %}mine{% else %}other{% endif %}" data-id="{{ m.id }}">
+                {% if m.remetente_id != usuario.id %}
+                <div class="chat-meta">{{ m.remetente_nome }} · {{ m.remetente_perfil }}</div>
+                {% endif %}
+                <div class="chat-text">{{ m.texto }}</div>
+                <div class="chat-time">{{ m.criado_em }}</div>
+            </div>
+            {% else %}
+            <p class="chat-empty" id="chat-empty">Nenhuma mensagem ainda. Seja o primeiro a escrever.</p>
+            {% endfor %}
+        </div>
+
+        <form method="post" action="/chat/enviar" class="chat-form" id="chat-form">
+            {% if com_usuario %}
+            <input type="hidden" name="destinatario_id" value="{{ com_usuario.id }}">
+            {% endif %}
+            <input type="text" name="texto" id="chat-texto" placeholder="Digite sua mensagem..." maxlength="2000" required autocomplete="off">
+            <button type="submit" class="btn btn-primary">Enviar</button>
+        </form>
+    </section>
+</div>
+
+<script>
+(function () {
+  var box = document.getElementById("chat-messages");
+  var form = document.getElementById("chat-form");
+  var input = document.getElementById("chat-texto");
+  if (!box) return;
+  box.scrollTop = box.scrollHeight;
+  function appendMsg(m, meuId) {
+    var empty = document.getElementById("chat-empty");
+    if (empty) empty.remove();
+    if (box.querySelector('[data-id="' + m.id + '"]')) return;
+    var div = document.createElement("div");
+    div.className = "chat-bubble " + (String(m.remetente_id) === String(meuId) ? "mine" : "other");
+    div.setAttribute("data-id", m.id);
+    var html = "";
+    if (String(m.remetente_id) !== String(meuId)) {
+      html += '<div class="chat-meta">' + (m.remetente_nome || "") + " · " + (m.remetente_perfil || "") + "</div>";
+    }
+    html += '<div class="chat-text"></div><div class="chat-time"></div>';
+    div.innerHTML = html;
+    div.querySelector(".chat-text").textContent = m.texto || "";
+    div.querySelector(".chat-time").textContent = m.criado_em || "";
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+    box.setAttribute("data-last", m.id);
+  }
+  var meuId = "{{ usuario.id }}";
+  var com = box.getAttribute("data-com") || "";
+  function poll() {
+    var last = box.getAttribute("data-last") || "0";
+    var url = "/chat/api/mensagens?apos=" + encodeURIComponent(last);
+    if (com) url += "&com=" + encodeURIComponent(com);
+    fetch(url, { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data || !data.ok) return;
+        (data.mensagens || []).forEach(function (m) { appendMsg(m, meuId); });
+        var badge = document.getElementById("chat-badge");
+        if (badge && data.nao_lidas !== undefined) {
+          if (data.nao_lidas > 0) { badge.textContent = data.nao_lidas; badge.style.display = "inline-block"; }
+          else { badge.style.display = "none"; }
+        }
+      }).catch(function () {});
+  }
+  setInterval(poll, 4000);
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var fd = new FormData(form);
+    fetch("/chat/enviar", { method: "POST", body: fd, credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && data.ok && data.mensagem) { appendMsg(data.mensagem, meuId); input.value = ""; input.focus(); }
+        else if (data && data.erro) alert(data.erro);
+      }).catch(function () { form.submit(); });
+  });
+})();
+</script>
+{% endblock %}
