@@ -51,24 +51,41 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Data Início *</label>
-                <input type="date" name="data_inicio" id="data_inicio" value="{{ item.data_inicio if item else '' }}" required>
-            </div>
-            <div class="form-group">
-                <label>Data Fim *</label>
-                <input type="date" name="data_fim" id="data_fim" value="{{ item.data_fim if item else '' }}" required>
+                <label>Operador responsável</label>
+                <select name="operador_id" id="campo-operador-contrato">
+                    <option value="">— Selecione o operador —</option>
+                    {% for op in operadores or [] %}
+                    <option value="{{ op.id }}"
+                        {% if item and item.operador_id and item.operador_id|int == op.id|int %}selected{% endif %}>
+                        #{{ op.id }} — {{ op.nome }} ({{ op.perfil }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <small style="color:#718096; font-size:0.8rem;">Admin e operador podem definir o responsável por este contrato.</small>
             </div>
             <div class="form-group">
                 <label>Valor Total (R$) *</label>
-                <input type="number" step="0.01" name="valor" id="valor" value="{{ item.valor if item else '' }}" required>
+                <input type="number" step="0.01" name="valor" id="valor" value="{{ item.valor if item else '' }}" placeholder="0.00">
             </div>
             <div class="form-group">
-                <label>Qtd. Meses <small style="color:#718096;">(calculado)</small></label>
-                <input type="text" id="quantidade_meses_display" readonly value="{% if item and item.quantidade_meses %}{{ item.quantidade_meses }}{% else %}0{% endif %}" style="background:#edf2f7; cursor:not-allowed;">
+                <label>Data Início</label>
+                <input type="date" name="data_inicio" id="data_inicio" value="{{ item.data_inicio if item else '' }}">
             </div>
             <div class="form-group">
-                <label>Valor Mensal <small style="color:#718096;">(calculado)</small></label>
-                <input type="text" id="valor_mensal_display" readonly value="{% if item and item.valor_mensal %}{{ '%.2f'|format(item.valor_mensal) }}{% else %}0.00{% endif %}" style="background:#edf2f7; cursor:not-allowed;">
+                <label>Data Fim (término)</label>
+                <input type="date" name="data_fim" id="data_fim" value="{{ item.data_fim if item else '' }}">
+            </div>
+            <div class="form-group">
+                <label>Quantidade de Meses <small style="color:#718096;">(calculado)</small></label>
+                <input type="text" id="quantidade_meses_display" readonly
+                       value="{{ item.quantidade_meses if item else '0' }}"
+                       style="background:#edf2f7; cursor:not-allowed;">
+            </div>
+            <div class="form-group">
+                <label>Valor Mensal (R$) <small style="color:#718096;">(calculado)</small></label>
+                <input type="text" id="valor_mensal_display" readonly
+                       value="{% if item and item.valor_mensal %}{{ '%.2f'|format(item.valor_mensal) }}{% else %}0.00{% endif %}"
+                       style="background:#edf2f7; cursor:not-allowed;">
             </div>
             <div class="form-group full">
                 <label>Objeto do Contrato *</label>
@@ -91,28 +108,30 @@
 </div>
 
 <script>
-function calcularMeses(inicio, fim) {
-    if (!inicio || !fim) return 0;
-    var d1 = new Date(inicio + 'T00:00:00');
-    var d2 = new Date(fim + 'T00:00:00');
-    if (d2 < d1) return 0;
-    var meses = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
-    if (d2.getDate() > d1.getDate()) meses += 1;
-    if (meses === 0 && d2 >= d1) meses = 1;
-    return Math.max(meses, 0);
-}
-function atualizarCalculos() {
-    var inicio = document.getElementById('data_inicio').value;
-    var fim = document.getElementById('data_fim').value;
-    var valor = parseFloat(document.getElementById('valor').value) || 0;
-    var meses = calcularMeses(inicio, fim);
+(function () {
+  function calc() {
+    var ini = document.getElementById("data_inicio").value;
+    var fim = document.getElementById("data_fim").value;
+    var valor = parseFloat(document.getElementById("valor").value) || 0;
+    var meses = 0;
+    if (ini && fim) {
+      var d1 = new Date(ini + "T00:00:00");
+      var d2 = new Date(fim + "T00:00:00");
+      if (d2 >= d1) {
+        meses = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+        if (d2.getDate() >= d1.getDate()) meses += 1;
+        if (meses < 1) meses = 1;
+      }
+    }
+    document.getElementById("quantidade_meses_display").value = meses;
     var mensal = meses > 0 ? (valor / meses) : 0;
-    document.getElementById('quantidade_meses_display').value = meses;
-    document.getElementById('valor_mensal_display').value = mensal.toFixed(2);
-}
-document.getElementById('data_inicio').addEventListener('change', atualizarCalculos);
-document.getElementById('data_fim').addEventListener('change', atualizarCalculos);
-document.getElementById('valor').addEventListener('input', atualizarCalculos);
-atualizarCalculos();
+    document.getElementById("valor_mensal_display").value = mensal.toFixed(2);
+  }
+  ["data_inicio", "data_fim", "valor"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) { el.addEventListener("change", calc); el.addEventListener("input", calc); }
+  });
+  calc();
+})();
 </script>
 {% endblock %}
