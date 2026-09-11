@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} — Controle de Contratos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ titulo }}</h1>
+    <a href="/contratos" class="btn btn-outline">← Voltar</a>
+</div>
+
+<div class="card">
+    <form method="post" action="{{ action }}" id="form-contrato">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Número do Contrato *</label>
+                <input type="text" name="numero" value="{{ item.numero if item else numero_sugerido }}" required>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status">
+                    {% set st = item.status if item else 'Ativo' %}
+                    <option value="Ativo" {% if st == 'Ativo' %}selected{% endif %}>Ativo</option>
+                    <option value="Encerrado" {% if st == 'Encerrado' %}selected{% endif %}>Encerrado</option>
+                    <option value="Cancelado" {% if st == 'Cancelado' %}selected{% endif %}>Cancelado</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Contratante *</label>
+                <select name="contratante_id" required>
+                    <option value="">— Selecione —</option>
+                    {% for ct in contratantes %}
+                    <option value="{{ ct.id }}" {% if item and item.contratante_id == ct.id %}selected{% endif %}>{{ ct.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Contratado *</label>
+                <select name="contratado_id" required>
+                    <option value="">— Selecione —</option>
+                    {% for cd in contratados %}
+                    <option value="{{ cd.id }}" {% if item and item.contratado_id == cd.id %}selected{% endif %}>{{ cd.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Setor</label>
+                <select name="setor_id">
+                    <option value="">— Nenhum —</option>
+                    {% for s in setores %}
+                    <option value="{{ s.id }}" {% if item and item.setor_id == s.id %}selected{% endif %}>{{ s.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Data Início *</label>
+                <input type="date" name="data_inicio" id="data_inicio" value="{{ item.data_inicio if item else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label>Data Fim *</label>
+                <input type="date" name="data_fim" id="data_fim" value="{{ item.data_fim if item else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label>Valor Total (R$) *</label>
+                <input type="number" step="0.01" name="valor" id="valor" value="{{ item.valor if item else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label>Qtd. Meses <small style="color:#718096;">(calculado)</small></label>
+                <input type="text" id="quantidade_meses_display" readonly value="{% if item and item.quantidade_meses %}{{ item.quantidade_meses }}{% else %}0{% endif %}" style="background:#edf2f7; cursor:not-allowed;">
+            </div>
+            <div class="form-group">
+                <label>Valor Mensal <small style="color:#718096;">(calculado)</small></label>
+                <input type="text" id="valor_mensal_display" readonly value="{% if item and item.valor_mensal %}{{ '%.2f'|format(item.valor_mensal) }}{% else %}0.00{% endif %}" style="background:#edf2f7; cursor:not-allowed;">
+            </div>
+            <div class="form-group full">
+                <label>Objeto do Contrato *</label>
+                <textarea name="objeto" rows="3" required>{{ item.objeto if item else '' }}</textarea>
+            </div>
+            <div class="form-group full">
+                <label>Observações</label>
+                <textarea name="observacoes" rows="2">{{ item.observacoes if item else '' }}</textarea>
+            </div>
+        </div>
+        <p style="font-size:0.85rem; color:#718096; margin-top:0.5rem;">
+            A <strong>quantidade de meses</strong> é calculada pela diferença entre Data Início e Data Fim.
+            O <strong>valor mensal</strong> = Valor Total ÷ Quantidade de Meses.
+        </p>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Salvar Contrato</button>
+            <a href="/contratos" class="btn btn-outline">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function calcularMeses(inicio, fim) {
+    if (!inicio || !fim) return 0;
+    var d1 = new Date(inicio + 'T00:00:00');
+    var d2 = new Date(fim + 'T00:00:00');
+    if (d2 < d1) return 0;
+    var meses = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+    if (d2.getDate() > d1.getDate()) meses += 1;
+    if (meses === 0 && d2 >= d1) meses = 1;
+    return Math.max(meses, 0);
+}
+function atualizarCalculos() {
+    var inicio = document.getElementById('data_inicio').value;
+    var fim = document.getElementById('data_fim').value;
+    var valor = parseFloat(document.getElementById('valor').value) || 0;
+    var meses = calcularMeses(inicio, fim);
+    var mensal = meses > 0 ? (valor / meses) : 0;
+    document.getElementById('quantidade_meses_display').value = meses;
+    document.getElementById('valor_mensal_display').value = mensal.toFixed(2);
+}
+document.getElementById('data_inicio').addEventListener('change', atualizarCalculos);
+document.getElementById('data_fim').addEventListener('change', atualizarCalculos);
+document.getElementById('valor').addEventListener('input', atualizarCalculos);
+atualizarCalculos();
+</script>
+{% endblock %}
