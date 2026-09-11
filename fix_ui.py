@@ -1,50 +1,151 @@
 #!/usr/bin/env python3
-"""Garante static/style.css com marca d'agua discreta no canto."""
+"""UI sofisticada: marca d'agua central + CSS de formularios/botoes."""
 from pathlib import Path
+import re
 
 static = Path("static")
 static.mkdir(exist_ok=True)
 (static / "uploads").mkdir(exist_ok=True)
 
-CSS = r'''/* Controle de Contratos */
-:root { --primary:#1a365d; --primary-light:#2b6cb0; --bg:#f7fafc; --card:#fff; --border:#e2e8f0; --text:#1a202c; --muted:#718096; }
-* { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; min-height:100vh; }
-.marca-dagua { position:fixed; right:1rem; bottom:1rem; width:min(220px,28vw); opacity:0.12; z-index:0; pointer-events:none; object-fit:contain; }
-.navbar { background:#1a365d; color:#fff; padding:0.85rem 1.25rem; display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem 1rem; position:sticky; top:0; z-index:100; }
-.navbar .brand { color:#fff; font-weight:700; text-decoration:none; }
-.navbar nav a { color:rgba(255,255,255,0.92); text-decoration:none; padding:0.3rem 0.55rem; border-radius:4px; font-size:0.9rem; }
-.navbar nav a:hover { background:rgba(255,255,255,0.15); }
-.container { max-width:1100px; margin:0 auto; padding:1.25rem 1rem; position:relative; z-index:1; }
-.card, .stat-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:1.1rem; margin-bottom:1rem; position:relative; z-index:1; }
-.stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:0.85rem; margin-bottom:1.25rem; }
-.stat-card .number { font-size:1.6rem; font-weight:700; color:#2b6cb0; }
-.stat-card .label { font-size:0.85rem; color:#718096; }
-.btn { display:inline-block; padding:0.45rem 0.9rem; border-radius:6px; border:1px solid transparent; cursor:pointer; font-size:0.9rem; text-decoration:none; }
-.btn-primary { background:#2b6cb0; color:#fff; }
-.btn-outline { background:#fff; border-color:#cbd5e0; color:#2d3748; }
-.btn-danger { background:#e53e3e; color:#fff; }
-.btn-sm { padding:0.25rem 0.55rem; font-size:0.8rem; }
-.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; }
-.form-group.full { grid-column:1/-1; }
-.form-group label { display:block; font-size:0.85rem; font-weight:600; color:#1a365d; margin-bottom:0.3rem; }
-.form-group input, .form-group select, .form-group textarea { width:100%; padding:0.5rem 0.65rem; border:1px solid #e2e8f0; border-radius:6px; }
-.form-actions { margin-top:1rem; display:flex; gap:0.5rem; }
-table { width:100%; border-collapse:collapse; background:#fff; }
-th, td { padding:0.55rem 0.65rem; border-bottom:1px solid #e2e8f0; text-align:left; font-size:0.9rem; }
-th { background:#f7fafc; color:#1a365d; }
-.alert { padding:0.75rem 1rem; border-radius:8px; margin-bottom:1rem; }
-.alert-error { background:#fff5f5; color:#c53030; border:1px solid #feb2b2; }
-.alert-info { background:#ebf8ff; color:#2b6cb0; border:1px solid #90cdf4; }
-.badge { display:inline-block; padding:0.15rem 0.45rem; border-radius:999px; font-size:0.75rem; }
-.badge-vencido { background:#c6f6d5; color:#276749; }
-.badge-encerrado { background:#fefcbf; color:#975a16; }
-.badge-cancelado { background:#fed7d7; color:#c53030; }
-.footer { text-align:center; color:#a0aec0; font-size:0.8rem; padding:1.5rem; }
-.page-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; margin-bottom:1.25rem; }
-.page-header h1 { font-size:1.4rem; color:#1a365d; }
-@media (max-width:700px){ .form-grid { grid-template-columns:1fr; } }
+CSS = r'''/* Controle de Contratos — UI sofisticada v12 */
+:root {
+    --primary: #1a365d; --primary-mid: #2b6cb0; --primary-soft: #ebf4ff;
+    --accent: #3182ce; --success: #38a169; --danger: #e53e3e;
+    --bg: #eef2f7; --card: #fff; --text: #1a202c; --muted: #718096;
+    --border: #e2e8f0; --radius: 12px;
+    --shadow: 0 4px 20px rgba(26, 54, 93, 0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    background: linear-gradient(160deg, #eef2f7 0%, #e2e8f0 50%, #edf2f7 100%);
+    color: var(--text); line-height: 1.55; min-height: 100vh;
+}
+.marca-dagua {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: min(720px, 70vw); max-height: 80vh; object-fit: contain;
+    opacity: 0.14; z-index: 0; pointer-events: none; user-select: none;
+}
+.navbar {
+    background: linear-gradient(135deg, #0f2744 0%, #1a365d 45%, #2a4a7a 100%);
+    color: #fff; padding: 0.9rem 1.5rem; display: flex; flex-wrap: wrap;
+    align-items: center; gap: 0.6rem 1rem; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 24px rgba(15, 39, 68, 0.35);
+}
+.navbar .brand { color: #fff; font-weight: 700; font-size: 1.15rem; text-decoration: none; }
+.navbar nav a {
+    color: rgba(255,255,255,0.9); text-decoration: none; padding: 0.4rem 0.7rem;
+    border-radius: 8px; font-size: 0.88rem; font-weight: 500;
+}
+.navbar nav a:hover { background: rgba(255,255,255,0.14); }
+.container { max-width: 1120px; margin: 0 auto; padding: 1.5rem 1.1rem 2.5rem; position: relative; z-index: 1; }
+.page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.9rem; margin-bottom: 1.4rem; }
+.page-header h1 { font-size: 1.55rem; color: var(--primary); font-weight: 700; }
+.card, .stat-card {
+    background: rgba(255,255,255,0.94); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.35rem 1.4rem; margin-bottom: 1.15rem;
+    box-shadow: var(--shadow); position: relative; z-index: 1;
+}
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.95rem; margin-bottom: 1.4rem; }
+.stat-card .number { font-size: 1.75rem; font-weight: 800; color: var(--primary-mid); }
+.stat-card .label { font-size: 0.82rem; color: var(--muted); }
+.btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0.55rem 1.15rem; border-radius: 10px; border: 1px solid transparent;
+    cursor: pointer; font-size: 0.9rem; font-weight: 600; text-decoration: none;
+    transition: all 0.2s ease;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #2b6cb0 0%, #1a365d 100%);
+    color: #fff; box-shadow: 0 4px 14px rgba(43, 108, 176, 0.35);
+}
+.btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-success { background: linear-gradient(135deg, #48bb78 0%, #276749 100%); color: #fff; }
+.btn-danger { background: linear-gradient(135deg, #fc8181 0%, #c53030 100%); color: #fff; }
+.btn-outline { background: #fff; border: 1.5px solid #cbd5e0; color: #2d3748; }
+.btn-outline:hover { border-color: var(--primary-mid); color: var(--primary-mid); background: var(--primary-soft); }
+.btn-sm { padding: 0.32rem 0.7rem; font-size: 0.8rem; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.15rem; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { display: block; font-size: 0.8rem; font-weight: 650; color: var(--primary); margin-bottom: 0.35rem; }
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 0.65rem 0.85rem; border: 1.5px solid #e2e8f0;
+    border-radius: 10px; background: #fff; font-size: 0.95rem; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 4px rgba(49, 130, 206, 0.18);
+}
+.form-actions {
+    margin-top: 1.35rem; display: flex; gap: 0.65rem; flex-wrap: wrap;
+    padding-top: 1rem; border-top: 1px solid var(--border);
+}
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 0.7rem 0.75rem; border-bottom: 1px solid #edf2f7; text-align: left; font-size: 0.9rem; }
+th { background: #f7fafc; color: var(--primary); font-weight: 650; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.alert { padding: 0.85rem 1.1rem; border-radius: 10px; margin-bottom: 1.1rem; }
+.alert-error { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; }
+.alert-info { background: #ebf8ff; color: #2b6cb0; border: 1px solid #90cdf4; }
+.badge { display: inline-block; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 650; }
+.badge-vencido, .badge-ativo { background: #c6f6d5; color: #276749; }
+.badge-encerrado { background: #fefcbf; color: #975a16; }
+.badge-cancelado { background: #fed7d7; color: #c53030; }
+.footer { text-align: center; color: #a0aec0; font-size: 0.8rem; padding: 1.75rem; position: relative; z-index: 1; }
+@media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
 '''
 Path("static/style.css").write_text(CSS, encoding="utf-8")
-print("style.css written", Path("static/style.css").stat().st_size)
+print("style.css written")
+
+base = Path("templates/base.html")
+Path("templates").mkdir(exist_ok=True)
+if base.exists():
+    t = base.read_text(encoding="utf-8")
+    t2 = re.sub(
+        r"\.marca-dagua\s*\{[^}]+\}",
+        ".marca-dagua {\n"
+        "            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);\n"
+        "            width: min(720px, 70vw); max-height: 80vh; height: auto;\n"
+        "            object-fit: contain; opacity: 0.14; z-index: 0;\n"
+        "            pointer-events: none; user-select: none;\n"
+        "        }",
+        t,
+        count=3,
+    )
+    t2 = t2.replace("right: 1rem;", "/* center */")
+    t2 = t2.replace("bottom: 1rem;", "")
+    inject = """
+        .btn-primary {
+            background: linear-gradient(135deg, #2b6cb0 0%, #1a365d 100%) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 14px rgba(43, 108, 176, 0.35);
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.55rem 1.15rem;
+        }
+        .btn-outline {
+            background: #fff !important;
+            border: 1.5px solid #cbd5e0 !important;
+            color: #2d3748 !important;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.55rem 1.15rem;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #3182ce !important;
+            box-shadow: 0 0 0 4px rgba(49, 130, 206, 0.18) !important;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            border-radius: 10px !important;
+            padding: 0.65rem 0.85rem !important;
+            border: 1.5px solid #e2e8f0 !important;
+        }
+        .card { border-radius: 12px !important; box-shadow: 0 4px 20px rgba(26,54,93,0.08) !important; }
+"""
+    if "linear-gradient(135deg, #2b6cb0" not in t2 and "</style>" in t2:
+        t2 = t2.replace("</style>", inject + "\n    </style>", 1)
+        print("btn/form styles injected")
+    base.write_text(t2, encoding="utf-8")
+    print("base marca centered")
+else:
+    print("no base.html")
 print("fix_ui done")
