@@ -4,12 +4,139 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Controle de Contratos{% endblock %}</title>
-    <link rel="stylesheet" href="/static/style.css?v=6">
+    <link rel="stylesheet" href="/static/style.css?v=10">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f7fafc;
+            color: #1a202c;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        .marca-dagua {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            width: min(220px, 28vw);
+            height: auto;
+            opacity: 0.12;
+            z-index: 0;
+            pointer-events: none;
+            user-select: none;
+            object-fit: contain;
+        }
+        .navbar {
+            background: #1a365d !important;
+            color: #fff !important;
+            padding: 0.85rem 1.25rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .navbar .brand {
+            color: #fff !important;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            margin-right: 0.5rem;
+        }
+        .navbar nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.15rem; }
+        .navbar nav a {
+            color: rgba(255,255,255,0.92) !important;
+            text-decoration: none;
+            padding: 0.3rem 0.55rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .navbar nav a:hover { background: rgba(255,255,255,0.15); }
+        .navbar span { color: rgba(255,255,255,0.85); font-size: 0.85rem; }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.25rem 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .page-header h1 { font-size: 1.4rem; color: #1a365d; }
+        .card, .stat-card {
+            background: #fff !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 1.1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            position: relative;
+            z-index: 1;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+        .stat-card .number { font-size: 1.6rem; font-weight: 700; color: #2b6cb0; }
+        .stat-card .label { font-size: 0.85rem; color: #718096; }
+        .stat-card .stat-soma { font-size: 0.85rem; color: #4a5568; margin-top: 0.25rem; }
+        .btn {
+            display: inline-block;
+            padding: 0.45rem 0.9rem;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+        .btn-primary { background: #2b6cb0; color: #fff !important; }
+        .btn-outline { background: #fff; border-color: #cbd5e0; color: #2d3748 !important; }
+        .btn-danger { background: #e53e3e; color: #fff !important; }
+        .btn-sm { padding: 0.25rem 0.55rem; font-size: 0.8rem; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #1a365d; margin-bottom: 0.3rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 0.5rem 0.65rem; border: 1px solid #e2e8f0; border-radius: 6px;
+            background: #fff; color: #1a202c;
+        }
+        .form-actions { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        table { width: 100%; border-collapse: collapse; background: #fff; }
+        th, td { padding: 0.55rem 0.65rem; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 0.9rem; }
+        th { background: #f7fafc; color: #1a365d; }
+        .table-wrap { overflow-x: auto; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .alert { padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        .alert-error { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; }
+        .alert-info { background: #ebf8ff; color: #2b6cb0; border: 1px solid #90cdf4; }
+        .badge { display: inline-block; padding: 0.15rem 0.45rem; border-radius: 999px; font-size: 0.75rem; }
+        .badge-vencido { background: #c6f6d5; color: #276749; }
+        .badge-encerrado { background: #fefcbf; color: #975a16; }
+        .badge-cancelado { background: #fed7d7; color: #c53030; }
+        .badge-ativo { background: #bee3f8; color: #2a4365; }
+        .footer { text-align: center; color: #a0aec0; font-size: 0.8rem; padding: 1.5rem; position: relative; z-index: 1; }
+        .empty { text-align: center; padding: 2rem; color: #718096; background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; }
+        @media (max-width: 700px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .navbar nav a { margin: 0; font-size: 0.82rem; padding: 0.25rem 0.4rem; }
+        }
+    </style>
 </head>
 <body>
     <img class="marca-dagua"
-         src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=900&h=1100&fit=crop&q=70"
-         alt="" aria-hidden="true">
+         src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=500&fit=crop&q=60"
+         alt=""
+         aria-hidden="true">
 
     <header class="navbar">
         <a href="/" class="brand">Controle de Contratos</a>
@@ -21,13 +148,13 @@
             <a href="/contratos">Contratos</a>
             <a href="/consultas">Consultas</a>
             {% if usuario and usuario.perfil in ['admin', 'operador'] %}
-            <a href="/chat">Chat {% if nao_lidas %}<span id="chat-badge" style="display:inline-block">{{ nao_lidas }}</span>{% else %}<span id="chat-badge"></span>{% endif %}</a>
+            <a href="/chat">Chat {% if nao_lidas %}<span id="chat-badge" style="display:inline-block;background:#e53e3e;color:#fff;border-radius:999px;font-size:0.7rem;padding:0.1rem 0.4rem;margin-left:0.2rem;">{{ nao_lidas }}</span>{% else %}<span id="chat-badge"></span>{% endif %}</a>
             {% endif %}
             {% if usuario and usuario.perfil == 'admin' %}
             <a href="/usuarios">Usuários</a>
             {% endif %}
             {% if usuario %}
-            <span style="margin-left:1rem; opacity:0.85; font-size:0.85rem;">{{ usuario.nome }} ({{ usuario.perfil }})</span>
+            <span style="margin-left:0.5rem;">{{ usuario.nome }} ({{ usuario.perfil }})</span>
             <a href="/logout">Sair</a>
             {% endif %}
         </nav>
