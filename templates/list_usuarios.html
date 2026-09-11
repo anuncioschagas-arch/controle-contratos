@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Usuários — Controle de Contratos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Usuários do Sistema</h1>
+    <a href="/usuarios/novo" class="btn btn-primary">+ Novo Usuário</a>
+</div>
+
+<div class="card">
+    <p style="font-size:0.9rem; color:#4a5568; margin-bottom:1rem;">
+        <strong>Perfis:</strong>
+        <b>admin</b> — acesso total · <b>operador</b> — cadastrar e editar · <b>consulta</b> — apenas visualizar
+    </p>
+    {% if itens %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Login</th>
+                    <th>Perfil</th>
+                    <th>Contratante</th>
+                    <th>Setor</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in itens %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td><strong>{{ u.nome }}</strong></td>
+                    <td>{{ u.login }}</td>
+                    <td>{{ u.perfil }}</td>
+                    <td>{{ u.contratante_nome or '—' }}</td>
+                    <td>{{ u.setor_nome or '—' }}</td>
+                    <td>
+                        {% if u.ativo %}
+                        <span class="badge badge-ativo">Ativo</span>
+                        {% else %}
+                        <span class="badge badge-cancelado">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td class="btn-group">
+                        <a href="/usuarios/{{ u.id }}/editar" class="btn btn-sm btn-outline">Editar</a>
+                        {% if u.id != usuario.id %}
+                        <form method="post" action="/usuarios/{{ u.id }}/excluir" style="display:inline;"
+                              onsubmit="return confirm('Excluir este usuário?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty"><p>Nenhum usuário cadastrado.</p></div>
+    {% endif %}
+</div>
+{% endblock %}

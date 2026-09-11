@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Setores — Controle de Contratos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Setores</h1>
+    <a href="/setores/novo" class="btn btn-primary">+ Novo Setor</a>
+</div>
+
+<div class="card">
+    {% if itens %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Contratante</th>
+                    <th>Responsável</th>
+                    <th>Celular</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in itens %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td><strong>{{ item.nome }}</strong></td>
+                    <td>{{ item.contratante_nome or '—' }}</td>
+                    <td>{{ item.responsavel or '—' }}</td>
+                    <td>{{ item.nrcelular or '—' }}</td>
+                    <td class="btn-group">
+                        <a href="/setores/{{ item.id }}/editar" class="btn btn-sm btn-outline">Editar</a>
+                        <form method="post" action="/setores/{{ item.id }}/excluir" style="display:inline;" onsubmit="return confirm('Confirma exclusão?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>Nenhum setor cadastrado.</p>
+        <a href="/setores/novo" class="btn btn-primary">Cadastrar setor</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
