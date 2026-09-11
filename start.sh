@@ -8,4 +8,5 @@ if [ -f runtime_patch.py ]; then python runtime_patch.py || true; fi
 if [ -f chat_install.py ]; then python chat_install.py || true; fi
 if [ -f fix_contratante_form.py ]; then python fix_contratante_form.py || true; fi
 if [ -f fix_doc_edit.py ]; then python fix_doc_edit.py || true; fi
+if [ -f fix_contrato_operador.py ]; then python fix_contrato_operador.py || true; fi
 exec python app.py
