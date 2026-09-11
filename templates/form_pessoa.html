@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} — Controle de Contratos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ titulo }}</h1>
+    <a href="{{ base_url }}" class="btn btn-outline">← Voltar</a>
+</div>
+
+<div class="card">
+    <form method="post" action="{{ action }}" {% if com_fotos %}enctype="multipart/form-data"{% endif %} id="form-pessoa">
+        <div class="form-grid">
+            <div class="form-group full">
+                <label>Nome / Razão Social *</label>
+                <input type="text" name="nome" id="campo-nome" value="{{ item.nome if item else '' }}" required>
+            </div>
+
+            {% if mostrar_contratante %}
+            <div class="form-group full">
+                <label>Contratante {% if usuario and usuario.perfil == 'admin' %}(ID + Nome){% endif %}</label>
+                {% if usuario and usuario.perfil == 'admin' %}
+                <select name="contratante_id" id="campo-contratante">
+                    <option value="">— Selecione o contratante —</option>
+                    {% for ct in contratantes %}
+                    <option value="{{ ct.id }}"
+                        {% if item and item.contratante_id == ct.id %}selected{% endif %}>
+                        #{{ ct.id }} — {{ ct.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small style="color:#718096; font-size:0.8rem;">Administrador pode vincular ou alterar o contratante deste contratado.</small>
+                {% else %}
+                {% set cid = item.contratante_id if item and item.contratante_id else (usuario.contratante_id if usuario else None) %}
+                <input type="hidden" name="contratante_id" value="{{ cid or '' }}">
+                <p style="padding:0.5rem 0.7rem; background:#edf2f7; border-radius:6px; margin:0;">
+                    {% if cid %}
+                        #{{ cid }} —
+                        {% for ct in contratantes if ct.id == cid %}
+                            {{ ct.nome }}
+                        {% else %}
+                            Contratante vinculado
+                        {% endfor %}
+                    {% else %}—{% endif %}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="form-group">
+                <label>CPF ou CNPJ</label>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                    <input type="text" name="documento" id="campo-documento" value="{{ item.documento if item else '' }}"
+                           placeholder="000.000.000-00 ou 00.000.000/0000-00" style="flex:1;">
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-cnpj" title="Buscar dados do CNPJ">Buscar CNPJ</button>
+                </div>
+                <small id="msg-cnpj" style="color:#718096; font-size:0.8rem;"></small>
+            </div>
+            <div class="form-group">
+                <label>CEP</label>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                    <input type="text" name="cep" id="campo-cep" value="{{ item.cep if item else '' }}"
+                           placeholder="00000-000" style="flex:1;">
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-cep" title="Buscar endereço pelo CEP">Buscar CEP</button>
+                </div>
+                <small id="msg-cep" style="color:#718096; font-size:0.8rem;"></small>
+            </div>
+            <div class="form-group">
+                <label>Logradouro</label>
+                <input type="text" name="logradouro" id="campo-logradouro" value="{{ item.logradouro if item else '' }}">
+            </div>
+            <div class="form-group">
+                <label>Número</label>
+                <input type="text" name="numero" id="campo-numero" value="{{ item.numero if item else '' }}">
+            </div>
+            <div class="form-group">
+                <label>Bairro</label>
+                <input type="text" name="bairro" id="campo-bairro" value="{{ item.bairro if item else '' }}">
+            </div>
+            <div class="form-group">
+                <label>Cidade</label>
+                <input type="text" name="cidade" id="campo-cidade" value="{{ item.cidade if item else '' }}">
+            </div>
+            <div class="form-group">
+                <label>UF</label>
+                <input type="text" name="uf" id="campo-uf" value="{{ item.uf if item else '' }}" maxlength="2" placeholder="SP">
+            </div>
+            <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" name="email" id="campo-email" value="{{ item.email if item else '' }}">
+            </div>
+            <div class="form-group">
+                <label>Celular</label>
+                <input type="text" name="celular" id="campo-celular" value="{{ item.celular if item else '' }}" placeholder="(11) 99999-9999">
+            </div>
+            <div class="form-group">
+                <label>WhatsApp</label>
+                <input type="text" name="whatsapp" id="campo-whatsapp" value="{{ item.whatsapp if item else '' }}" placeholder="(11) 99999-9999">
+            </div>
+
+            {% if com_fotos %}
+            <div class="form-group full" style="margin-top:0.5rem;">
+                <h3 style="color:#1a365d; font-size:1rem; margin-bottom:0.75rem;">Documentos (fotos)</h3>
+            </div>
+            <div class="form-group">
+                <label>Foto do Documento Pessoal (RG/CNH)</label>
+                <input type="file" name="foto_documento" accept="image/*,.pdf">
+                {% if item and item.foto_documento %}
+                <p style="margin-top:0.4rem; font-size:0.85rem;">
+                    Atual: <a href="/{{ item.foto_documento }}" target="_blank">Ver documento</a>
+                </p>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label>Foto do Comprovante de Residência</label>
+                <input type="file" name="foto_comprovante" accept="image/*,.pdf">
+                {% if item and item.foto_comprovante %}
+                <p style="margin-top:0.4rem; font-size:0.85rem;">
+                    Atual: <a href="/{{ item.foto_comprovante }}" target="_blank">Ver comprovante</a>
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <a href="{{ base_url }}" class="btn btn-outline">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+(function () {
+  function soDigitos(v) { return (v || "").replace(/\D/g, ""); }
+  function setMsg(id, texto, ok) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = texto || "";
+    el.style.color = ok ? "#276749" : "#c53030";
+  }
+  function preencher(mapa) {
+    Object.keys(mapa).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var val = mapa[id];
+      if (val === undefined || val === null || val === "") return;
+      if (el.value && id !== "campo-documento" && id !== "campo-cep") return;
+      el.value = val;
+    });
+  }
+  function preencherForcado(mapa) {
+    Object.keys(mapa).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var val = mapa[id];
+      if (val === undefined || val === null) return;
+      el.value = val;
+    });
+  }
+  function buscarCep(forcar) {
+    var cep = soDigitos(document.getElementById("campo-cep").value);
+    if (cep.length !== 8) { setMsg("msg-cep", "Informe um CEP com 8 dígitos.", false); return; }
+    setMsg("msg-cep", "Consultando CEP...", true);
+    fetch("/api/cep/" + cep).then(function (r) { return r.json(); }).then(function (data) {
+      if (!data.ok) { setMsg("msg-cep", data.erro || "CEP não encontrado.", false); return; }
+      var fn = forcar ? preencherForcado : preencher;
+      fn({"campo-cep": data.cep, "campo-logradouro": data.logradouro, "campo-bairro": data.bairro, "campo-cidade": data.cidade, "campo-uf": data.uf});
+      setMsg("msg-cep", "Endereço preenchido pelo CEP.", true);
+      var num = document.getElementById("campo-numero"); if (num) num.focus();
+    }).catch(function () { setMsg("msg-cep", "Erro de conexão ao consultar CEP.", false); });
+  }
+  function buscarCnpj(forcar) {
+    var cnpj = soDigitos(document.getElementById("campo-documento").value);
+    if (cnpj.length !== 14) { setMsg("msg-cnpj", "Para buscar, informe um CNPJ com 14 dígitos.", false); return; }
+    setMsg("msg-cnpj", "Consultando CNPJ...", true);
+    fetch("/api/cnpj/" + cnpj).then(function (r) { return r.json(); }).then(function (data) {
+      if (!data.ok) { setMsg("msg-cnpj", data.erro || "CNPJ não encontrado.", false); return; }
+      var fn = forcar ? preencherForcado : preencher;
+      fn({"campo-documento": data.documento, "campo-nome": data.nome, "campo-email": data.email, "campo-celular": data.telefone, "campo-cep": data.cep, "campo-logradouro": data.logradouro, "campo-numero": data.numero, "campo-bairro": data.bairro, "campo-cidade": data.cidade, "campo-uf": data.uf});
+      setMsg("msg-cnpj", "Dados da empresa preenchidos pelo CNPJ.", true);
+    }).catch(function () { setMsg("msg-cnpj", "Erro de conexão ao consultar CNPJ.", false); });
+  }
+  var btnCep = document.getElementById("btn-cep");
+  var btnCnpj = document.getElementById("btn-cnpj");
+  if (btnCep) btnCep.addEventListener("click", function () { buscarCep(true); });
+  if (btnCnpj) btnCnpj.addEventListener("click", function () { buscarCnpj(true); });
+  var campoCep = document.getElementById("campo-cep");
+  var campoDoc = document.getElementById("campo-documento");
+  if (campoCep) campoCep.addEventListener("blur", function () { if (soDigitos(this.value).length === 8) buscarCep(false); });
+  if (campoDoc) campoDoc.addEventListener("blur", function () { if (soDigitos(this.value).length === 14) buscarCnpj(false); });
+})();
+</script>
+{% endblock %}
