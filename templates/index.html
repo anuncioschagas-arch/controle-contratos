@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Controle de Contratos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <a href="/contratos/novo" class="btn btn-primary">+ Novo Contrato</a>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="number">{{ stats.total_contratos }}</div>
+        <div class="label">Total de Contratos</div>
+        <div class="stat-soma">R$ {{ '%.2f'|format(stats.total_soma or 0)|replace('.', ',') }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ stats.ativos }}</div>
+        <div class="label">Contratos Ativos</div>
+        <div class="stat-soma">R$ {{ '%.2f'|format(stats.ativos_soma or 0)|replace('.', ',') }}</div>
+    </div>
+    <div class="stat-card" style="border-color:#d69e2e;">
+        <div class="number" style="color:#975a16;">{{ stats.encerrados_qtd or 0 }}</div>
+        <div class="label">Encerrados</div>
+        <div class="stat-soma" style="color:#975a16;">R$ {{ '%.2f'|format(stats.encerrados_soma or 0)|replace('.', ',') }}</div>
+    </div>
+    <div class="stat-card" style="border-color:#e53e3e;">
+        <div class="number" style="color:#c53030;">{{ stats.cancelados_qtd or 0 }}</div>
+        <div class="label">Cancelados</div>
+        <div class="stat-soma" style="color:#c53030;">R$ {{ '%.2f'|format(stats.cancelados_soma or 0)|replace('.', ',') }}</div>
+    </div>
+    <div class="stat-card stat-vencido">
+        <div class="number">{{ stats.vencidos or 0 }}</div>
+        <div class="label">Vencidos (ativos)</div>
+        <div class="stat-soma">R$ {{ '%.2f'|format(stats.vencidos_soma or 0)|replace('.', ',') }}</div>
+    </div>
+    <div class="stat-card stat-alerta">
+        <div class="number">{{ stats.vencendo_30 or 0 }}</div>
+        <div class="label">Vencem em 30 dias</div>
+        <div class="stat-soma">R$ {{ '%.2f'|format(stats.vencendo_30_soma or 0)|replace('.', ',') }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ stats.total_contratantes }}</div>
+        <div class="label">Contratantes</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ stats.total_contratados }}</div>
+        <div class="label">Contratados</div>
+    </div>
+</div>
+
+<div style="margin-bottom:1rem; font-size:0.85rem; color:#4a5568;">
+    <strong>Legenda:</strong>
+    <span class="badge badge-vencido">Vencido</span>
+    <span class="badge badge-encerrado">Encerrado</span>
+    <span class="badge badge-cancelado">Cancelado</span>
+    <span class="badge badge-ativo">Ativo</span>
+</div>
+
+<div class="card">
+    <h2 style="font-size:1.1rem; margin-bottom:1rem; color:#1a365d;">Contratos que vencem nos próximos 30 dias</h2>
+    {% if vencendo_30 %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Contratante</th>
+                    <th>Contratado</th>
+                    <th>Vencimento</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in vencendo_30 %}
+                <tr class="row-vencendo">
+                    <td><strong>{{ c.numero }}</strong></td>
+                    <td>{{ c.contratante_nome or '—' }}</td>
+                    <td>{{ c.contratado_nome or '—' }}</td>
+                    <td>{{ c.data_fim or '—' }}</td>
+                    <td><span class="badge badge-ativo">{{ c.status }}</span></td>
+                    <td><a href="/contratos/{{ c.id }}" class="btn btn-sm btn-outline">Ver</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>Nenhum contrato ativo vencendo nos próximos 30 dias.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2 style="font-size:1.1rem; margin-bottom:1rem; color:#1a365d;">Últimos Contratos</h2>
+    {% if contratos %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Contratante</th>
+                    <th>Contratado</th>
+                    <th>Vencimento</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in contratos[:10] %}
+                {% set row_class = '' %}
+                {% if c.status == 'Cancelado' %}
+                    {% set row_class = 'row-cancelado' %}
+                {% elif c.status == 'Encerrado' %}
+                    {% set row_class = 'row-encerrado' %}
+                {% elif c.data_fim and c.data_fim < hoje %}
+                    {% set row_class = 'row-vencido' %}
+                {% endif %}
+                <tr class="{{ row_class }}">
+                    <td><strong>{{ c.numero }}</strong></td>
+                    <td>{{ c.contratante_nome or '—' }}</td>
+                    <td>{{ c.contratado_nome or '—' }}</td>
+                    <td>{{ c.data_fim or '—' }}</td>
+                    <td>
+                        {% if c.data_fim and c.data_fim < hoje and c.status == 'Ativo' %}
+                        <span class="badge badge-vencido">Vencido</span>
+                        {% elif c.status == 'Encerrado' %}
+                        <span class="badge badge-encerrado">Encerrado</span>
+                        {% elif c.status == 'Cancelado' %}
+                        <span class="badge badge-cancelado">Cancelado</span>
+                        {% else %}
+                        <span class="badge badge-ativo">{{ c.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/contratos/{{ c.id }}" class="btn btn-sm btn-outline">Ver</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>Nenhum contrato cadastrado ainda.</p>
+        <a href="/contratos/novo" class="btn btn-primary">Criar primeiro contrato</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
