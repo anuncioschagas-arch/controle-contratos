@@ -31,6 +31,22 @@
             </div>
             {% endif %}
 
+            {% if mostrar_operador or (mostrar_contratante and usuario and usuario.perfil == 'admin') %}
+            <div class="form-group full">
+                <label>Operador responsável</label>
+                <select name="operador_id" id="campo-operador">
+                    <option value="">— Selecione o operador —</option>
+                    {% for op in (operadores if operadores is defined else []) %}
+                    <option value="{{ op.id }}"
+                        {% if item and item.operador_id and item.operador_id|int == op.id|int %}selected{% endif %}>
+                        #{{ op.id }} — {{ op.nome }} ({{ op.perfil }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <small style="color:#718096; font-size:0.8rem;">Somente o administrador define ou altera o operador vinculado a este contratado.</small>
+            </div>
+            {% endif %}
+
             <div class="form-group">
                 <label>CPF ou CNPJ</label>
                 <div style="display:flex; gap:0.4rem; align-items:center;">
