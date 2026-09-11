@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} — Controle de Contratos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ titulo }}</h1>
+    <a href="{{ base_url }}/novo" class="btn btn-primary">+ Novo</a>
+</div>
+
+<div class="card">
+    <form method="get" action="{{ base_url }}" style="margin-bottom:1rem; display:flex; gap:0.5rem;">
+        <input type="text" name="q" value="{{ search or '' }}" placeholder="Buscar por nome ou documento..." style="flex:1; padding:0.5rem 0.7rem; border:1px solid #e2e8f0; border-radius:6px;">
+        <button type="submit" class="btn btn-outline">Buscar</button>
+        {% if search %}<a href="{{ base_url }}" class="btn btn-outline">Limpar</a>{% endif %}
+    </form>
+
+    {% if items %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    {% if base_url == '/contratados' %}
+                    <th>Contratante</th>
+                    {% endif %}
+                    <th>Documento</th>
+                    <th>Cidade/UF</th>
+                    <th>Celular</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td><strong>{{ item.nome }}</strong></td>
+                    {% if base_url == '/contratados' %}
+                    <td>
+                        {% if item.contratante_id %}
+                        #{{ item.contratante_id }}{% if item.contratante_nome %} — {{ item.contratante_nome }}{% endif %}
+                        {% else %}—{% endif %}
+                    </td>
+                    {% endif %}
+                    <td>{{ item.documento or '—' }}</td>
+                    <td>{{ item.cidade or '' }}{% if item.uf %}/{{ item.uf }}{% endif %}</td>
+                    <td>{{ item.celular or '—' }}</td>
+                    <td class="btn-group">
+                        <a href="{{ base_url }}/{{ item.id }}/editar" class="btn btn-sm btn-outline">Editar</a>
+                        <form method="post" action="{{ base_url }}/{{ item.id }}/excluir" style="display:inline;" onsubmit="return confirm('Confirma exclusão?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>Nenhum registro encontrado.</p>
+        <a href="{{ base_url }}/novo" class="btn btn-primary">Cadastrar</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
