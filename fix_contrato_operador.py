@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Adiciona operador_id ao contrato e campo no formulario."""
+"""operador_id em contrato + get_contrato seguro (evita 500 se coluna nao existir)."""
 from pathlib import Path
 import re
 
@@ -11,19 +11,22 @@ if dbp.exists():
         if not _coluna_existe(cur, "contrato", "operador_id"):
             cur.execute("ALTER TABLE contrato ADD COLUMN operador_id INTEGER")
 '''
-        if "quantidade_meses" in t:
-            p = t.find("ALTER TABLE contrato ADD COLUMN quantidade_meses")
+        for marker in [
+            'ALTER TABLE contrato ADD COLUMN quantidade_meses INTEGER DEFAULT 0")',
+            'ALTER TABLE contrato ADD COLUMN quantidade_meses',
+            'CREATE TABLE IF NOT EXISTS contrato',
+        ]:
+            p = t.find(marker)
             if p > 0:
-                p = t.find("\n", p) + 1
+                if "CREATE TABLE" in marker:
+                    p2 = t.find('""")', p)
+                    p = t.find("\n", p2) + 1
+                else:
+                    p = t.find("\n", p) + 1
                 t = t[:p] + mig + t[p:]
                 print("contrato operador migration")
-            else:
-                p = t.find("CREATE TABLE IF NOT EXISTS contrato")
-                if p > 0:
-                    p2 = t.find('""")', p)
-                    p2 = t.find("\n", p2) + 1
-                    t = t[:p2] + mig + t[p2:]
-                    print("contrato operador migration after create")
+                break
+
     if "def list_operadores" not in t:
         t += '''
 
@@ -35,7 +38,50 @@ def list_operadores():
         return [dict(r) for r in rows]
 '''
         print("list_operadores")
-    if "operador_id=?" not in t[t.find("def save_contrato"): t.find("def save_contrato") + 500]:
+
+    new_get = '''
+def get_contrato(id):
+    with db_session() as conn:
+        try:
+            cols = [r[1] for r in conn.execute("PRAGMA table_info(contrato)").fetchall()]
+            if "operador_id" not in cols:
+                conn.execute("ALTER TABLE contrato ADD COLUMN operador_id INTEGER")
+        except Exception:
+            pass
+        row = conn.execute("""
+            SELECT c.*,
+                   ct.nome AS contratante_nome, ct.documento AS contratante_doc,
+                   ct.email AS contratante_email, ct.celular AS contratante_celular,
+                   ct.logradouro AS contratante_logradouro, ct.numero AS contratante_numero,
+                   ct.bairro AS contratante_bairro, ct.cidade AS contratante_cidade,
+                   ct.uf AS contratante_uf, ct.cep AS contratante_cep,
+                   cd.nome AS contratado_nome, cd.documento AS contratado_doc,
+                   cd.email AS contratado_email, cd.celular AS contratado_celular,
+                   cd.logradouro AS contratado_logradouro, cd.numero AS contratado_numero,
+                   cd.bairro AS contratado_bairro, cd.cidade AS contratado_cidade,
+                   cd.uf AS contratado_uf, cd.cep AS contratado_cep,
+                   cd.foto_documento AS contratado_foto_documento,
+                   cd.foto_comprovante AS contratado_foto_comprovante,
+                   s.nome AS setor_nome, s.responsavel AS setor_responsavel,
+                   op.nome AS operador_nome
+            FROM contrato c
+            LEFT JOIN contratante ct ON c.contratante_id = ct.id
+            LEFT JOIN contratado cd ON c.contratado_id = cd.id
+            LEFT JOIN setor s ON c.setor_id = s.id
+            LEFT JOIN usuario op ON c.operador_id = op.id
+            WHERE c.id = ?
+        """, (id,)).fetchone()
+        return dict(row) if row else None
+'''
+    start = t.find("def get_contrato(")
+    if start >= 0:
+        rest = t[start + 4 :]
+        m = re.search(r"\ndef ", rest)
+        end = start + 4 + m.start() if m else len(t)
+        t = t[:start] + new_get.strip() + "\n\n" + t[end + 1 :]
+        print("get_contrato safe replaced")
+
+    if "operador_id=?" not in t[t.find("def save_contrato"): t.find("def save_contrato") + 600]:
         t = t.replace(
             "numero=?, contratante_id=?, contratado_id=?, setor_id=?,\n                    objeto=?",
             "numero=?, contratante_id=?, contratado_id=?, setor_id=?, operador_id=?,\n                    objeto=?",
@@ -49,29 +95,44 @@ def list_operadores():
             "(numero, contratante_id, contratado_id, setor_id, objeto, valor,",
             "(numero, contratante_id, contratado_id, setor_id, operador_id, objeto, valor,",
         )
+        print("save_contrato fields attempted")
+
+    if "def save_contrato" in t and "PRAGMA table_info(contrato)" not in t[t.find("def save_contrato"): t.find("def save_contrato") + 350]:
         t = t.replace(
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "data = aplicar_calculos_contrato(data)\n\n    with db_session() as conn:\n        if id:",
+            "data = aplicar_calculos_contrato(data)\n\n    with db_session() as conn:\n"
+            "        try:\n"
+            "            cols = [r[1] for r in conn.execute(\"PRAGMA table_info(contrato)\").fetchall()]\n"
+            "            if \"operador_id\" not in cols:\n"
+            "                conn.execute(\"ALTER TABLE contrato ADD COLUMN operador_id INTEGER\")\n"
+            "        except Exception:\n"
+            "            pass\n"
+            "        if id:",
             1,
         )
-        print("save_contrato operador")
-    if "operador_nome" not in t[t.find("def get_contrato"): t.find("def get_contrato") + 800]:
-        t = t.replace(
-            "s.nome AS setor_nome, s.responsavel AS setor_responsavel\n            FROM contrato c",
-            "s.nome AS setor_nome, s.responsavel AS setor_responsavel,\n                   op.nome AS operador_nome\n            FROM contrato c",
-        )
-        t = t.replace(
-            "LEFT JOIN setor s ON c.setor_id = s.id\n            WHERE c.id = ?",
-            "LEFT JOIN setor s ON c.setor_id = s.id\n            LEFT JOIN usuario op ON c.operador_id = op.id\n            WHERE c.id = ?",
-        )
-        print("get_contrato operador")
+        print("save pragma")
+
     dbp.write_text(t, encoding="utf-8")
 
+try:
+    import sqlite3
+    for name in ("contratos.db", "data/contratos.db"):
+        p = Path(name)
+        if p.exists():
+            conn = sqlite3.connect(str(p))
+            cols = [r[1] for r in conn.execute("PRAGMA table_info(contrato)").fetchall()]
+            if "operador_id" not in cols:
+                conn.execute("ALTER TABLE contrato ADD COLUMN operador_id INTEGER")
+                conn.commit()
+                print("DB migrated", name)
+            conn.close()
+except Exception as e:
+    print("db migrate skip", e)
+
 form = Path("templates/form_contrato.html")
-if form.exists():
+if form.exists() and "campo-operador-contrato" not in form.read_text(encoding="utf-8"):
     f = form.read_text(encoding="utf-8")
-    if "campo-operador-contrato" not in f:
-        block = '''
+    block = '''
             <div class="form-group">
                 <label>Operador responsável</label>
                 <select name="operador_id" id="campo-operador-contrato">
@@ -85,16 +146,10 @@ if form.exists():
                 </select>
             </div>
 '''
-        if "<label>Valor Total (R$) *</label>" in f:
-            f = f.replace(
-                "<label>Valor Total (R$) *</label>",
-                block + "\n                <label>Valor Total (R$) *</label>",
-                1,
-            )
-            form.write_text(f, encoding="utf-8")
-            print("form operador")
-    else:
-        print("form ok")
+    if "<label>Valor Total (R$) *</label>" in f:
+        f = f.replace("<label>Valor Total (R$) *</label>", block + "\n                <label>Valor Total (R$) *</label>", 1)
+        form.write_text(f, encoding="utf-8")
+        print("form operador")
 
 app = Path("app.py")
 if app.exists():
@@ -129,14 +184,13 @@ if app.exists():
         start = t.find("def novo_contrato")
         end = t.find("def editar_contrato")
         if start > 0 and end > start:
-            chunk = t[start:end].replace("setores=setores,", "setores=setores, operadores=operadores,")
-            t = t[:start] + chunk + t[end:]
+            t = t[:start] + t[start:end].replace("setores=setores,", "setores=setores, operadores=operadores,") + t[end:]
         start = t.find("def editar_contrato")
         if start > 0:
             m = re.search(r"\ndef ", t[start + 4 :])
             end = start + 4 + m.start() if m else len(t)
-            chunk = t[start:end].replace("setores=setores,", "setores=setores, operadores=operadores,")
-            t = t[:start] + chunk + t[end:]
-        print("app render operadores")
+            t = t[:start] + t[start:end].replace("setores=setores,", "setores=setores, operadores=operadores,") + t[end:]
+        print("app render")
     app.write_text(t, encoding="utf-8")
+
 print("fix_contrato_operador done")
