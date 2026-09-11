@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
-if [ ! -f app.py ] || [ -f bootstrap_extract.py ]; then
-  if [ -f bootstrap_extract.py ]; then
-    python bootstrap_extract.py
-  fi
+if [ -f apply_updates.py ]; then
+  python apply_updates.py || true
+fi
+if [ ! -f app.py ] && [ -f join_bootstrap.py ]; then
+  python join_bootstrap.py || true
+fi
+if [ ! -f app.py ] && [ -f bootstrap_extract.py ]; then
+  python bootstrap_extract.py || true
 fi
 exec python app.py
