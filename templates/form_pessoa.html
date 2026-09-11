@@ -17,32 +17,17 @@
 
             {% if mostrar_contratante %}
             <div class="form-group full">
-                <label>Contratante (ID + Nome)</label>
-                {% if usuario and usuario.perfil in ['admin', 'operador'] %}
+                <label>Contratante (ID + Nome) *</label>
                 <select name="contratante_id" id="campo-contratante">
                     <option value="">— Selecione o contratante —</option>
-                    {% for ct in contratantes %}
+                    {% for ct in contratantes or [] %}
                     <option value="{{ ct.id }}"
-                        {% if item and item.contratante_id == ct.id %}selected{% endif %}>
+                        {% if item and item.contratante_id and item.contratante_id|int == ct.id|int %}selected{% endif %}>
                         #{{ ct.id }} — {{ ct.nome }}
                     </option>
                     {% endfor %}
                 </select>
                 <small style="color:#718096; font-size:0.8rem;">Admin e operador podem vincular ou corrigir o contratante deste contratado.</small>
-                {% else %}
-                {% set cid = item.contratante_id if item and item.contratante_id else (usuario.contratante_id if usuario else None) %}
-                <input type="hidden" name="contratante_id" value="{{ cid or '' }}">
-                <p style="padding:0.5rem 0.7rem; background:#edf2f7; border-radius:6px; margin:0;">
-                    {% if cid %}
-                        #{{ cid }} —
-                        {% for ct in contratantes if ct.id == cid %}
-                            {{ ct.nome }}
-                        {% else %}
-                            Contratante vinculado
-                        {% endfor %}
-                    {% else %}—{% endif %}
-                </p>
-                {% endif %}
             </div>
             {% endif %}
 
