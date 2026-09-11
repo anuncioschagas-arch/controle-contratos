@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Consultas — Controle de Contratos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Consultas de Contratos</h1>
+</div>
+
+<div class="card">
+    <form method="get" action="/consultas" id="form-consulta">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status">
+                    <option value="">— Todos —</option>
+                    <option value="Ativo" {% if filtros.status == 'Ativo' %}selected{% endif %}>Ativo</option>
+                    <option value="Encerrado" {% if filtros.status == 'Encerrado' %}selected{% endif %}>Encerrado</option>
+                    <option value="Cancelado" {% if filtros.status == 'Cancelado' %}selected{% endif %}>Cancelado</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Setor</label>
+                <select name="setor_id">
+                    <option value="">— Todos —</option>
+                    {% for s in setores %}
+                    <option value="{{ s.id }}" {% if filtros.setor_id == s.id|string %}selected{% endif %}>{{ s.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Vencimento (atalho)</label>
+                <select name="vencimento_preset">
+                    <option value="">— Qualquer —</option>
+                    <option value="vencidos" {% if filtros.vencimento_preset == 'vencidos' %}selected{% endif %}>Já vencidos</option>
+                    <option value="mes" {% if filtros.vencimento_preset == 'mes' %}selected{% endif %}>Vencem neste mês</option>
+                    <option value="30" {% if filtros.vencimento_preset == '30' %}selected{% endif %}>Próximos 30 dias</option>
+                    <option value="60" {% if filtros.vencimento_preset == '60' %}selected{% endif %}>Próximos 60 dias</option>
+                    <option value="90" {% if filtros.vencimento_preset == '90' %}selected{% endif %}>Próximos 90 dias</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Vencimento de</label>
+                <input type="date" name="vencimento_de" value="{{ filtros.vencimento_de or '' }}">
+            </div>
+            <div class="form-group">
+                <label>Vencimento até</label>
+                <input type="date" name="vencimento_ate" value="{{ filtros.vencimento_ate or '' }}">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Consultar</button>
+            <a href="/consultas" class="btn btn-outline">Limpar filtros</a>
+            {% if itens %}
+            <a href="/consultas/pdf?{{ query_string }}" class="btn btn-success" target="_blank">Gerar PDF da consulta</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2 style="font-size:1.1rem; margin-bottom:1rem; color:#1a365d;">Resultados ({{ itens|length }})</h2>
+    {% if itens %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Contratante</th>
+                    <th>Contratado</th>
+                    <th>Setor</th>
+                    <th>Vencimento</th>
+                    <th>Meses</th>
+                    <th>Valor Mensal</th>
+                    <th>Valor Total</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in itens %}
+                <tr>
+                    <td><strong>{{ c.numero }}</strong></td>
+                    <td>{{ c.contratante_nome or '—' }}</td>
+                    <td>{{ c.contratado_nome or '—' }}</td>
+                    <td>{{ c.setor_nome or '—' }}</td>
+                    <td>{{ c.data_fim or '—' }}</td>
+                    <td>{{ c.quantidade_meses or '—' }}</td>
+                    <td>{% if c.valor_mensal %}R$ {{ '%.2f'|format(c.valor_mensal)|replace('.', ',') }}{% else %}—{% endif %}</td>
+                    <td>{% if c.valor %}R$ {{ '%.2f'|format(c.valor)|replace('.', ',') }}{% else %}—{% endif %}</td>
+                    <td>
+                        {% if c.data_fim and c.data_fim < hoje and c.status == 'Ativo' %}
+                        <span class="badge badge-vencido">Vencido</span>
+                        {% elif c.status == 'Encerrado' %}
+                        <span class="badge badge-encerrado">Encerrado</span>
+                        {% elif c.status == 'Cancelado' %}
+                        <span class="badge badge-cancelado">Cancelado</span>
+                        {% else %}
+                        <span class="badge badge-ativo">{{ c.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="btn-group">
+                        <a href="/contratos/{{ c.id }}" class="btn btn-sm btn-outline">Ver</a>
+                        <a href="/contratos/{{ c.id }}/pdf" class="btn btn-sm btn-success" target="_blank">PDF</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>Nenhum contrato encontrado com esses filtros.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
