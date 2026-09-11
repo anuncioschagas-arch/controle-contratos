@@ -1,4 +1,41 @@
-{% extends "base.html" %}
+#!/usr/bin/env python3
+"""Corrige 500 em /contratos/<id>: template usa item, rota passava so c."""
+from pathlib import Path
+
+app = Path("app.py")
+if app.exists():
+    t = app.read_text(encoding="utf-8")
+    changed = False
+    for old, new in [
+        ('return render("ver_contrato.html", c=c)', 'return render("ver_contrato.html", c=c, item=c)'),
+        ("return render('ver_contrato.html', c=c)", "return render('ver_contrato.html', c=c, item=c)"),
+    ]:
+        if old in t and "item=c" not in t[t.find("def ver_contrato"): t.find("def ver_contrato") + 350]:
+            t = t.replace(old, new)
+            changed = True
+            print("replaced render")
+    if changed:
+        app.write_text(t, encoding="utf-8")
+        print("app.py updated")
+    else:
+        if "item=c" in t:
+            print("ver_contrato already ok")
+        else:
+            import re
+            t2, n = re.subn(
+                r'return render\(["\']ver_contrato\.html["\']\s*,\s*c=c\s*\)',
+                'return render("ver_contrato.html", c=c, item=c)',
+                t,
+                count=1,
+            )
+            if n:
+                app.write_text(t2, encoding="utf-8")
+                print("regex fixed")
+            else:
+                print("pattern miss")
+
+Path("templates").mkdir(exist_ok=True)
+Path("templates/ver_contrato.html").write_text("""{% extends "base.html" %}
 {% block title %}Contrato {{ item.numero }} — Controle de Contratos{% endblock %}
 {% block content %}
 <div class="page-header">
@@ -36,3 +73,6 @@
     {% if item.observacoes %}<p><strong>Observações:</strong> {{ item.observacoes }}</p>{% endif %}
 </div>
 {% endblock %}
+""", encoding="utf-8")
+print("ver_contrato.html written")
+print("fix_ver_contrato done")
