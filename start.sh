@@ -1,5 +1,8 @@
 #!/bin/bash
 set -e
+if [ -f ensure_static.py ]; then
+  python ensure_static.py || true
+fi
 if [ -f apply_updates.py ]; then
   python apply_updates.py || true
 fi
