@@ -12,4 +12,7 @@ fi
 if [ -f fix_contratante_form.py ]; then
   python fix_contratante_form.py || true
 fi
+if [ -f fix_doc_edit.py ]; then
+  python fix_doc_edit.py || true
+fi
 exec python app.py
