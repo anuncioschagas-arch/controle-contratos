@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+#!/usr/bin/env python3
+"""Garante login sem marca d'agua cobrindo o formulario."""
+from pathlib import Path
+
+LOGIN = '''<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -58,3 +62,8 @@
     </div>
 </body>
 </html>
+'''
+
+Path("templates").mkdir(exist_ok=True)
+Path("templates/login.html").write_text(LOGIN, encoding="utf-8")
+print("login.html rewritten (sem marca d'agua)")
