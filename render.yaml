@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
+    startCommand: bash start.sh
     envVars:
       - key: HOST
         value: 0.0.0.0
@@ -12,3 +12,9 @@ services:
         value: 10000
       - key: CONTRATOS_SECRET
         generateValue: true
+      - key: DATA_DIR
+        value: /data
+    disk:
+      name: contratos-data
+      mountPath: /data
+      sizeGB: 1

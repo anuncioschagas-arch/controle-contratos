@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+if [ -f fix_db_persist.py ]; then python fix_db_persist.py || true; fi
 if [ -f ensure_static.py ]; then python ensure_static.py || true; fi
 if [ -f fix_ui.py ]; then python fix_ui.py || true; fi
 if [ -f fix_login.py ]; then python fix_login.py || true; fi

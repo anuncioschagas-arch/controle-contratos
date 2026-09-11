@@ -6,3 +6,6 @@ static/uploads/*
 !static/uploads/.gitkeep
 *.pdf
 .DS_Store
+contratos.db
+*.db-journal
+data/
