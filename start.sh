@@ -10,4 +10,5 @@ if [ -f fix_contratante_form.py ]; then python fix_contratante_form.py || true; 
 if [ -f fix_doc_edit.py ]; then python fix_doc_edit.py || true; fi
 if [ -f fix_contrato_operador.py ]; then python fix_contrato_operador.py || true; fi
 if [ -f fix_ver_contrato.py ]; then python fix_ver_contrato.py || true; fi
+if [ -f fix_editar_contrato.py ]; then python fix_editar_contrato.py || true; fi
 exec python app.py
