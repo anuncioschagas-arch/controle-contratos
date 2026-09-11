@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Contrato {{ item.numero }} — Controle de Contratos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Contrato {{ item.numero }}</h1>
+    <div class="btn-group">
+        <a href="/contratos/{{ item.id }}/editar" class="btn btn-outline">Editar</a>
+        <a href="/contratos/{{ item.id }}/pdf" class="btn btn-success" target="_blank">PDF</a>
+        <a href="/contratos" class="btn btn-outline">← Voltar</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="detail-grid">
+        <div><strong>Número:</strong> {{ item.numero }}</div>
+        <div><strong>Status:</strong> {{ item.status }}</div>
+        <div><strong>Contratante:</strong> {{ item.contratante_nome or '—' }}</div>
+        <div><strong>Contratado:</strong> {{ item.contratado_nome or '—' }}</div>
+        <div><strong>Setor:</strong> {{ item.setor_nome or '—' }}</div>
+        <div><strong>Data início:</strong> {{ item.data_inicio or '—' }}</div>
+        <div><strong>Data fim:</strong> {{ item.data_fim or '—' }}</div>
+        <div><strong>Meses:</strong> {{ item.quantidade_meses or '—' }}</div>
+        <div><strong>Valor mensal:</strong> {% if item.valor_mensal %}R$ {{ '%.2f'|format(item.valor_mensal)|replace('.', ',') }}{% else %}—{% endif %}</div>
+        <div><strong>Valor total:</strong> {% if item.valor %}R$ {{ '%.2f'|format(item.valor)|replace('.', ',') }}{% else %}—{% endif %}</div>
+    </div>
+    {% if item.objeto %}
+    <div style="margin-top:1rem;"><strong>Objeto:</strong><p>{{ item.objeto }}</p></div>
+    {% endif %}
+    {% if item.observacoes %}
+    <div style="margin-top:1rem;"><strong>Observações:</strong><p>{{ item.observacoes }}</p></div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -8,6 +8,16 @@
 </div>
 
 <div class="card">
+    <form method="get" action="/contratos" style="margin-bottom:1rem; display:flex; gap:0.5rem; align-items:center;">
+        <label style="font-size:0.9rem;">Status:</label>
+        <select name="status" onchange="this.form.submit()" style="padding:0.4rem 0.6rem; border-radius:6px; border:1px solid #e2e8f0;">
+            <option value="">Todos</option>
+            <option value="Ativo" {% if status_filter == 'Ativo' %}selected{% endif %}>Ativo</option>
+            <option value="Encerrado" {% if status_filter == 'Encerrado' %}selected{% endif %}>Encerrado</option>
+            <option value="Cancelado" {% if status_filter == 'Cancelado' %}selected{% endif %}>Cancelado</option>
+        </select>
+    </form>
+
     {% if itens %}
     <div class="table-wrap">
         <table>
@@ -16,30 +26,30 @@
                     <th>Número</th>
                     <th>Contratante</th>
                     <th>Contratado</th>
-                    <th>Setor</th>
-                    <th>Início</th>
-                    <th>Fim</th>
+                    <th>Meses</th>
+                    <th>Valor Mensal</th>
+                    <th>Valor Total</th>
                     <th>Status</th>
                     <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for c in itens %}
-                {% set row_class = '' %}
-                {% if c.status == 'Cancelado' %}
-                    {% set row_class = 'row-cancelado' %}
-                {% elif c.status == 'Encerrado' %}
-                    {% set row_class = 'row-encerrado' %}
-                {% elif c.data_fim and c.data_fim < hoje %}
-                    {% set row_class = 'row-vencido' %}
-                {% endif %}
-                <tr class="{{ row_class }}">
+                <tr>
                     <td><strong>{{ c.numero }}</strong></td>
                     <td>{{ c.contratante_nome or '—' }}</td>
                     <td>{{ c.contratado_nome or '—' }}</td>
-                    <td>{{ c.setor_nome or '—' }}</td>
-                    <td>{{ c.data_inicio or '—' }}</td>
-                    <td>{{ c.data_fim or '—' }}</td>
+                    <td>{{ c.quantidade_meses or '—' }}</td>
+                    <td>
+                        {% if c.valor_mensal %}
+                        R$ {{ '%.2f'|format(c.valor_mensal)|replace('.', ',') }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if c.valor %}
+                        R$ {{ '%.2f'|format(c.valor)|replace('.', ',') }}
+                        {% else %}—{% endif %}
+                    </td>
                     <td>
                         {% if c.data_fim and c.data_fim < hoje and c.status == 'Ativo' %}
                         <span class="badge badge-vencido">Vencido</span>
@@ -54,6 +64,7 @@
                     <td class="btn-group">
                         <a href="/contratos/{{ c.id }}" class="btn btn-sm btn-outline">Ver</a>
                         <a href="/contratos/{{ c.id }}/editar" class="btn btn-sm btn-outline">Editar</a>
+                        <a href="/contratos/{{ c.id }}/pdf" class="btn btn-sm btn-success" target="_blank">PDF</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -62,7 +73,7 @@
     </div>
     {% else %}
     <div class="empty">
-        <p>Nenhum contrato cadastrado.</p>
+        <p>Nenhum contrato encontrado.</p>
         <a href="/contratos/novo" class="btn btn-primary">Criar contrato</a>
     </div>
     {% endif %}
