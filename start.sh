@@ -11,4 +11,5 @@ if [ -f fix_doc_edit.py ]; then python fix_doc_edit.py || true; fi
 if [ -f fix_contrato_operador.py ]; then python fix_contrato_operador.py || true; fi
 if [ -f fix_ver_contrato.py ]; then python fix_ver_contrato.py || true; fi
 if [ -f fix_editar_contrato.py ]; then python fix_editar_contrato.py || true; fi
+if [ -f fix_consultas_filtros.py ]; then python fix_consultas_filtros.py || true; fi
 exec python app.py

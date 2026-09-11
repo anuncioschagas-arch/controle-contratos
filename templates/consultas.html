@@ -10,12 +10,30 @@
     <form method="get" action="/consultas" id="form-consulta">
         <div class="form-grid">
             <div class="form-group">
-                <label>Status</label>
-                <select name="status">
+                <label>Contratante</label>
+                <select name="contratante_id">
                     <option value="">— Todos —</option>
-                    <option value="Ativo" {% if filtros.status == 'Ativo' %}selected{% endif %}>Ativo</option>
-                    <option value="Encerrado" {% if filtros.status == 'Encerrado' %}selected{% endif %}>Encerrado</option>
-                    <option value="Cancelado" {% if filtros.status == 'Cancelado' %}selected{% endif %}>Cancelado</option>
+                    {% for ct in contratantes or [] %}
+                    <option value="{{ ct.id }}" {% if filtros.contratante_id == ct.id|string %}selected{% endif %}>{{ ct.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Contratado</label>
+                <select name="contratado_id">
+                    <option value="">— Todos —</option>
+                    {% for cd in contratados or [] %}
+                    <option value="{{ cd.id }}" {% if filtros.contratado_id == cd.id|string %}selected{% endif %}>{{ cd.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Operador</label>
+                <select name="operador_id">
+                    <option value="">— Todos —</option>
+                    {% for op in operadores or [] %}
+                    <option value="{{ op.id }}" {% if filtros.operador_id == op.id|string %}selected{% endif %}>{{ op.nome }} ({{ op.perfil }})</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="form-group">
@@ -25,6 +43,15 @@
                     {% for s in setores %}
                     <option value="{{ s.id }}" {% if filtros.setor_id == s.id|string %}selected{% endif %}>{{ s.nome }}</option>
                     {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status">
+                    <option value="">— Todos —</option>
+                    <option value="Ativo" {% if filtros.status == 'Ativo' %}selected{% endif %}>Ativo</option>
+                    <option value="Encerrado" {% if filtros.status == 'Encerrado' %}selected{% endif %}>Encerrado</option>
+                    <option value="Cancelado" {% if filtros.status == 'Cancelado' %}selected{% endif %}>Cancelado</option>
                 </select>
             </div>
             <div class="form-group">
@@ -58,7 +85,13 @@
 </div>
 
 <div class="card">
-    <h2 style="font-size:1.1rem; margin-bottom:1rem; color:#1a365d;">Resultados ({{ itens|length }})</h2>
+    <p style="margin-bottom:1rem; color:#4a5568;">
+        <strong>{{ itens|length }}</strong> contrato(s) encontrado(s)
+        {% if filtros.status or filtros.setor_id or filtros.contratante_id or filtros.contratado_id or filtros.operador_id or filtros.vencimento_preset or filtros.vencimento_de or filtros.vencimento_ate %}
+        com os filtros aplicados
+        {% endif %}.
+    </p>
+
     {% if itens %}
     <div class="table-wrap">
         <table>
@@ -67,6 +100,7 @@
                     <th>Número</th>
                     <th>Contratante</th>
                     <th>Contratado</th>
+                    <th>Operador</th>
                     <th>Setor</th>
                     <th>Vencimento</th>
                     <th>Meses</th>
@@ -82,11 +116,20 @@
                     <td><strong>{{ c.numero }}</strong></td>
                     <td>{{ c.contratante_nome or '—' }}</td>
                     <td>{{ c.contratado_nome or '—' }}</td>
+                    <td>{{ c.operador_nome or '—' }}</td>
                     <td>{{ c.setor_nome or '—' }}</td>
                     <td>{{ c.data_fim or '—' }}</td>
                     <td>{{ c.quantidade_meses or '—' }}</td>
-                    <td>{% if c.valor_mensal %}R$ {{ '%.2f'|format(c.valor_mensal)|replace('.', ',') }}{% else %}—{% endif %}</td>
-                    <td>{% if c.valor %}R$ {{ '%.2f'|format(c.valor)|replace('.', ',') }}{% else %}—{% endif %}</td>
+                    <td>
+                        {% if c.valor_mensal %}
+                        R$ {{ '%.2f'|format(c.valor_mensal)|replace('.', ',') }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if c.valor %}
+                        R$ {{ '%.2f'|format(c.valor)|replace('.', ',') }}
+                        {% else %}—{% endif %}
+                    </td>
                     <td>
                         {% if c.data_fim and c.data_fim < hoje and c.status == 'Ativo' %}
                         <span class="badge badge-vencido">Vencido</span>
